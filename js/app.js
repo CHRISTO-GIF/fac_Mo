@@ -683,12 +683,51 @@
     showScreen("screen-home");
   }
 
-  // ================= PARTAGE / PDF =================
-  function shareDoc() {
-    // S'assure que le document est numéroté pour un partage cohérent
+  // ================= IMPRESSION / PDF =================
+  function printDoc() {
     if (!draft.number) draft.number = previewNumber(draft.type);
-    // L'impression native permet « Enregistrer au format PDF » puis partage
+    // L'impression native permet « Enregistrer au format PDF »
     window.print();
+  }
+
+  // ================= PARTAGE (Web Share API) =================
+  // Résumé texte du document (pour WhatsApp / email / presse-papier)
+  function buildShareText() {
+    const t = computeTotals(draft);
+    const lines = [
+      `${TYPE_LABELS[draft.type].toUpperCase()} N° ${draft.number}`,
+      company.name || "",
+      `Client : ${draft.client.name || "-"}`,
+      `Date : ${fmtDate(draft.date)}`,
+      `Total : ${fmtMoney(t.ttc)}`,
+    ];
+    if (draft.type === "facture" && draft.status !== "impaye") {
+      const paid = draft.status === "paye" ? t.ttc : Math.min(Number(draft.paidAmount) || 0, t.ttc);
+      const reste = Math.max(0, t.ttc - paid);
+      lines.push(`Statut : ${STATUS_LABELS[draft.status]}`);
+      if (reste > 0) lines.push(`Reste à payer : ${fmtMoney(reste)}`);
+    }
+    return lines.filter(Boolean).join("\n");
+  }
+
+  async function shareDoc() {
+    if (!draft.number) draft.number = previewNumber(draft.type);
+    const text = buildShareText();
+
+    // 1) Partage natif du résumé (WhatsApp, email, SMS…) en un tap
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: draft.number, text });
+        return;
+      } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    // 2) Repli : copie dans le presse-papier
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("Résumé copié — collez-le dans WhatsApp.");
+      return;
+    } catch (e) {}
+    toast("Partage non disponible. Utilisez 🖨 pour le PDF.");
   }
 
   // ================= RÉGLAGES ENTREPRISE =================
@@ -875,6 +914,7 @@
     // Aperçu
     $("#btn-preview-back").addEventListener("click", () => showScreen("screen-edit"));
     $("#btn-save").addEventListener("click", saveDraft);
+    $("#btn-print").addEventListener("click", printDoc);
     $("#btn-share").addEventListener("click", shareDoc);
 
     // Réglages
