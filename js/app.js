@@ -1046,6 +1046,7 @@
       syncClientFromInputs();
       renderPreview();
     });
+    $("#btn-edit-save").addEventListener("click", saveDraft);
     $("#btn-duplicate").addEventListener("click", duplicateDoc);
     $("#btn-delete").addEventListener("click", deleteDoc);
 
