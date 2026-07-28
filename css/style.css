@@ -303,6 +303,20 @@ input:focus { outline: none; border-color: var(--teal); }
 .inv-stamp.partiel { color: #c2410c; }
 .inv-stamp.paye { color: #15803d; }
 
+/* ---------- Carnet (clients & articles) ---------- */
+.catalog-item {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+}
+.catalog-item .cat-main { flex: 1; min-width: 0; }
+.catalog-item .cat-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.catalog-item .cat-sub { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+.catalog-item .cat-price { font-weight: 700; color: var(--teal-dark); white-space: nowrap; }
+.cat-del {
+  background: #fee2e2; color: var(--danger); border: none; border-radius: 10px;
+  width: 40px; height: 40px; font-size: 1rem; cursor: pointer; flex-shrink: 0;
+}
+
 /* ---------- Impression PDF ---------- */
 @media print {
   @page { size: A4; margin: 14mm; }

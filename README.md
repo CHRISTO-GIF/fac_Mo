@@ -8,6 +8,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 
 - **3 types de documents** au choix : Facture · Proforma · Devis (via un simple sélecteur)
 - **Logo + infos entreprise** saisis une seule fois, puis réutilisés automatiquement
+- **Carnet de clients & catalogue d'articles** : autocomplétion à la saisie (le tél/adresse du client et le prix de l'article se remplissent tout seuls), mémorisation automatique, écran de gestion (consulter / supprimer)
 - **Carnet d'articles** ligne par ligne (désignation, quantité, prix unitaire) avec totaux en direct
 - **TVA optionnelle** (par défaut 19,25 %), activable d'un geste
 - **Numérotation automatique** par type : `FAC-2026-001`, `PRO-2026-001`, `DEV-2026-001`
@@ -52,7 +53,6 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 
 ## 🛣️ Pistes suivantes (idées)
 
-- Carnet de **clients** et **catalogue d'articles** réutilisables
 - Modifier / supprimer / dupliquer un document
 - Choix de la **devise** et de plusieurs **modèles** de facture
 - Partage direct via la **Web Share API** (au lieu de l'impression)

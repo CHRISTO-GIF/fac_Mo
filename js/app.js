@@ -7,6 +7,8 @@
     company: "factopro_company",
     docs: "factopro_documents",
     counters: "factopro_counters",
+    clients: "factopro_clients",
+    articles: "factopro_articles",
   };
 
   const store = {
@@ -35,6 +37,11 @@
 
   let documents = store.get(KEYS.docs, []); // liste des documents enregistrés
   let counters = store.get(KEYS.counters, { facture: 0, proforma: 0, devis: 0 });
+  let clients = store.get(KEYS.clients, []);   // carnet de clients {id,name,phone,address}
+  let articles = store.get(KEYS.articles, []); // catalogue d'articles {id,desc,price}
+
+  // Onglet actif du carnet
+  let catalogTab = "clients";
 
   // Brouillon en cours d'édition
   let draft = null;
@@ -77,6 +84,129 @@
     el.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  // ================= CARNET : clients & articles =================
+  function norm(s) {
+    return String(s || "").trim().toLowerCase();
+  }
+
+  // Remplit les listes d'autocomplétion à partir du carnet
+  function populateDatalists() {
+    const cd = $("#clients-datalist");
+    const ad = $("#articles-datalist");
+    if (cd) cd.innerHTML = clients.map((c) => `<option value="${escapeHtml(c.name)}"></option>`).join("");
+    if (ad) ad.innerHTML = articles.map((a) => `<option value="${escapeHtml(a.desc)}"></option>`).join("");
+  }
+
+  // Auto-remplissage client (téléphone/adresse) si le nom correspond à un client connu
+  function autofillClient(name) {
+    const c = clients.find((x) => norm(x.name) === norm(name));
+    if (!c) return;
+    if (!$("#client-phone").value) { $("#client-phone").value = c.phone || ""; draft.client.phone = c.phone || ""; }
+    if (!$("#client-address").value) { $("#client-address").value = c.address || ""; draft.client.address = c.address || ""; }
+  }
+
+  // Auto-remplissage prix d'un article si la désignation correspond à un article connu
+  function articlePriceFor(desc) {
+    const a = articles.find((x) => norm(x.desc) === norm(desc));
+    return a ? a.price : null;
+  }
+
+  // Mémorise un client / article s'il est nouveau (appelé à l'enregistrement)
+  function rememberClient(client) {
+    if (!client.name) return;
+    const existing = clients.find((c) => norm(c.name) === norm(client.name));
+    if (existing) {
+      // met à jour tél/adresse si renseignés
+      if (client.phone) existing.phone = client.phone;
+      if (client.address) existing.address = client.address;
+    } else {
+      clients.push({ id: uid(), name: client.name, phone: client.phone || "", address: client.address || "" });
+    }
+    store.set(KEYS.clients, clients);
+  }
+
+  function rememberArticles(items) {
+    let changed = false;
+    for (const it of items) {
+      const desc = (it.desc || "").trim();
+      const price = Number(it.price) || 0;
+      if (!desc) continue;
+      const existing = articles.find((a) => norm(a.desc) === norm(desc));
+      if (existing) {
+        if (price > 0) { existing.price = price; changed = true; }
+      } else {
+        articles.push({ id: uid(), desc, price });
+        changed = true;
+      }
+    }
+    if (changed) store.set(KEYS.articles, articles);
+  }
+
+  // ---------- Écran Carnet ----------
+  function openCatalog() {
+    catalogTab = "clients";
+    renderCatalog();
+    showScreen("screen-catalog");
+  }
+
+  function renderCatalog() {
+    // onglets
+    $$("#catalog-tabs .seg").forEach((b) => b.classList.toggle("is-active", b.dataset.tab === catalogTab));
+    $("#catalog-clients").hidden = catalogTab !== "clients";
+    $("#catalog-articles").hidden = catalogTab !== "articles";
+
+    // clients
+    const cl = $("#clients-list");
+    cl.innerHTML = "";
+    $("#clients-empty").hidden = clients.length > 0;
+    [...clients].sort((a, b) => a.name.localeCompare(b.name, "fr")).forEach((c) => {
+      const li = document.createElement("li");
+      li.className = "catalog-item";
+      const sub = [c.phone, c.address].filter(Boolean).join(" · ");
+      li.innerHTML = `
+        <div class="cat-main">
+          <div class="cat-title">${escapeHtml(c.name)}</div>
+          ${sub ? `<div class="cat-sub">${escapeHtml(sub)}</div>` : ""}
+        </div>
+        <button class="cat-del" data-del-client="${c.id}" aria-label="Supprimer">🗑</button>`;
+      cl.appendChild(li);
+    });
+
+    // articles
+    const al = $("#articles-list");
+    al.innerHTML = "";
+    $("#articles-empty").hidden = articles.length > 0;
+    [...articles].sort((a, b) => a.desc.localeCompare(b.desc, "fr")).forEach((a) => {
+      const li = document.createElement("li");
+      li.className = "catalog-item";
+      li.innerHTML = `
+        <div class="cat-main">
+          <div class="cat-title">${escapeHtml(a.desc)}</div>
+        </div>
+        <div class="cat-price">${fmtMoney(a.price)}</div>
+        <button class="cat-del" data-del-article="${a.id}" aria-label="Supprimer">🗑</button>`;
+      al.appendChild(li);
+    });
+
+    // suppression
+    cl.querySelectorAll("[data-del-client]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        clients = clients.filter((c) => c.id !== btn.dataset.delClient);
+        store.set(KEYS.clients, clients);
+        populateDatalists();
+        renderCatalog();
+      })
+    );
+    al.querySelectorAll("[data-del-article]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        articles = articles.filter((a) => a.id !== btn.dataset.delArticle);
+        store.set(KEYS.articles, articles);
+        populateDatalists();
+        renderCatalog();
+      })
+    );
   }
 
   // ---------- Navigation entre écrans ----------
@@ -229,6 +359,7 @@
       newDraft();
     }
     $("#edit-title").textContent = existing ? "Modifier le document" : "Nouveau document";
+    populateDatalists();
 
     // type
     $$("#doc-type .seg").forEach((b) =>
@@ -278,7 +409,7 @@
       row.innerHTML = `
         <div class="field item-desc">
           <label class="field-label">Désignation</label>
-          <input type="text" data-idx="${idx}" data-k="desc" placeholder="Ex. Sac de ciment" value="${escapeHtml(item.desc)}" />
+          <input type="text" list="articles-datalist" autocomplete="off" data-idx="${idx}" data-k="desc" placeholder="Ex. Sac de ciment" value="${escapeHtml(item.desc)}" />
         </div>
         <div class="item-grid">
           <div class="field">
@@ -301,12 +432,30 @@
       inp.addEventListener("input", (e) => {
         const i = +e.target.dataset.idx;
         const k = e.target.dataset.k;
-        draft.items[i][k] = k === "desc" ? e.target.value : e.target.value;
+        draft.items[i][k] = e.target.value;
         // maj total ligne + totaux
         const lineTotal = e.target.closest(".item-row").querySelector(".item-line-total");
         const it = draft.items[i];
         lineTotal.textContent = "Total : " + fmtMoney((Number(it.qty)||0)*(Number(it.price)||0));
         updateEditTotals();
+      });
+    });
+    // auto-remplissage du prix quand on choisit un article connu
+    wrap.querySelectorAll('input[data-k="desc"]').forEach((inp) => {
+      inp.addEventListener("change", (e) => {
+        const i = +e.target.dataset.idx;
+        const price = articlePriceFor(e.target.value);
+        const cur = Number(draft.items[i].price) || 0;
+        if (price != null && cur === 0) {
+          draft.items[i].price = price;
+          const row = e.target.closest(".item-row");
+          const priceInput = row.querySelector('input[data-k="price"]');
+          if (priceInput) priceInput.value = price;
+          const it = draft.items[i];
+          row.querySelector(".item-line-total").textContent =
+            "Total : " + fmtMoney((Number(it.qty)||0)*(Number(it.price)||0));
+          updateEditTotals();
+        }
       });
     });
     wrap.querySelectorAll(".item-del").forEach((btn) => {
@@ -493,6 +642,9 @@
       documents.push(JSON.parse(JSON.stringify(draft)));
     }
     store.set(KEYS.docs, documents);
+    // mémorise le client et les articles dans le carnet
+    rememberClient(draft.client);
+    rememberArticles(draft.items);
     toast("Document enregistré ✓");
     renderHome();
     showScreen("screen-home");
@@ -569,6 +721,7 @@
     });
     $("#btn-settings").addEventListener("click", openSettings);
     $("#btn-settings-2").addEventListener("click", openSettings);
+    $("#btn-catalog").addEventListener("click", openCatalog);
     // filtres de l'accueil
     $$("#filters .chip").forEach((c) =>
       c.addEventListener("click", () => {
@@ -577,8 +730,19 @@
       })
     );
 
+    // Carnet
+    $("#btn-catalog-back").addEventListener("click", () => { showScreen("screen-home"); });
+    $$("#catalog-tabs .seg").forEach((b) =>
+      b.addEventListener("click", () => { catalogTab = b.dataset.tab; renderCatalog(); })
+    );
+
     // Édition
     $("#btn-edit-back").addEventListener("click", () => { renderHome(); showScreen("screen-home"); });
+    // auto-remplissage tél/adresse quand on choisit un client connu
+    $("#client-name").addEventListener("change", (e) => {
+      draft.client.name = e.target.value.trim();
+      autofillClient(e.target.value);
+    });
     $$("#doc-type .seg").forEach((b) =>
       b.addEventListener("click", () => {
         draft.type = b.dataset.type;
