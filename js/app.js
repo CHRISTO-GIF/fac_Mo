@@ -34,6 +34,7 @@
     taxId: "",
     currency: "XOF",
     accent: "#0f766e",
+    template: "classique",
     logo: "", // dataURL
   });
 
@@ -611,19 +612,24 @@
         (reste > 0 ? `<div class="row-between"><span>Reste à payer</span><span>${fmtMoney(reste)}</span></div>` : "")
       : "";
 
-    $("#invoice-paper").innerHTML = `
-      <div class="inv-head">
-        <div>
-          ${logoHtml}
-          <div class="inv-co-name">${escapeHtml(co.name || "Votre entreprise")}</div>
-          <div class="inv-co-lines">${coLines}</div>
-        </div>
-        <div>
-          <div class="inv-doc-type">${TYPE_LABELS[draft.type]}</div>
-          <div class="inv-doc-meta">N° ${escapeHtml(number)}<br />${fmtDate(draft.date)}</div>
-          ${stampHtml}
-        </div>
-      </div>
+    // En-tête selon le modèle choisi (classique ou bandeau)
+    const tpl = company.template || "classique";
+    const headLeft =
+      `${logoHtml}` +
+      `<div class="inv-co-name">${escapeHtml(co.name || "Votre entreprise")}</div>` +
+      `<div class="inv-co-lines">${coLines}</div>`;
+    const headRight =
+      `<div class="inv-doc-type">${TYPE_LABELS[draft.type]}</div>` +
+      `<div class="inv-doc-meta">N° ${escapeHtml(number)}<br />${fmtDate(draft.date)}</div>` +
+      `${stampHtml}`;
+    const headHtml = tpl === "bandeau"
+      ? `<div class="inv-band"><div>${headLeft}</div><div style="text-align:right">${headRight}</div></div>`
+      : `<div class="inv-head"><div>${headLeft}</div><div>${headRight}</div></div>`;
+
+    const paper = $("#invoice-paper");
+    paper.className = "invoice-paper tpl-" + tpl;
+    paper.innerHTML = `
+      ${headHtml}
 
       <div class="inv-parties">
         <div class="inv-block">
@@ -840,6 +846,9 @@
     fillAccentSwatches();
     $("#accent-custom").value = pendingAccent;
     markActiveSwatch(pendingAccent);
+    // modèle de facture
+    const tpl = company.template || "classique";
+    $$("#tpl-select .seg").forEach((b) => b.classList.toggle("is-active", b.dataset.tpl === tpl));
     $("#co-phone").value = company.phone || "";
     $("#co-email").value = company.email || "";
     $("#co-address").value = company.address || "";
@@ -862,6 +871,8 @@
     company.taxId = $("#co-taxid").value.trim();
     company.currency = $("#co-currency").value || DEFAULT_CURRENCY;
     company.accent = pendingAccent || DEFAULT_ACCENT;
+    const activeTpl = document.querySelector("#tpl-select .seg.is-active");
+    company.template = activeTpl ? activeTpl.dataset.tpl : "classique";
     store.set(KEYS.company, company);
     applyAccent(company.accent);
     toast("Entreprise enregistrée ✓");
@@ -1040,6 +1051,11 @@
       applyAccent(pendingAccent);
       markActiveSwatch(pendingAccent);
     });
+    $$("#tpl-select .seg").forEach((b) =>
+      b.addEventListener("click", () => {
+        $$("#tpl-select .seg").forEach((x) => x.classList.toggle("is-active", x === b));
+      })
+    );
     $("#btn-export").addEventListener("click", exportData);
     $("#import-input").addEventListener("change", (e) => {
       importData(e.target.files[0]);

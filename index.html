@@ -249,10 +249,17 @@
         </div>
       </div>
 
-      <!-- Couleur / thème -->
+      <!-- Apparence de la facture -->
       <div class="card">
-        <h3 class="card-title">Couleur de la facture</h3>
-        <p class="muted small" style="margin:0 0 12px">Choisissez la couleur d'accent de vos documents et de l'app.</p>
+        <h3 class="card-title">Apparence de la facture</h3>
+        <div class="field">
+          <label class="field-label">Modèle</label>
+          <div class="segmented" id="tpl-select">
+            <button type="button" class="seg is-active" data-tpl="classique">Classique</button>
+            <button type="button" class="seg" data-tpl="bandeau">Bandeau</button>
+          </div>
+        </div>
+        <label class="field-label">Couleur d'accent</label>
         <div class="swatches" id="accent-swatches"></div>
         <div class="field" style="margin-top:14px">
           <label class="field-label" for="accent-custom">Couleur personnalisée</label>

@@ -232,6 +232,20 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
   padding: 22px; color: #1e293b; font-size: 0.9rem; line-height: 1.5;
 }
 .inv-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+
+/* Modèle « Bandeau » : en-tête coloré pleine largeur */
+.tpl-bandeau .inv-band {
+  background: var(--teal); color: #fff;
+  margin: -22px -22px 18px; padding: 22px;
+  border-radius: 14px 14px 0 0;
+  display: flex; justify-content: space-between; gap: 16px;
+}
+.tpl-bandeau .inv-band .inv-co-name,
+.tpl-bandeau .inv-band .inv-doc-type { color: #fff; }
+.tpl-bandeau .inv-band .inv-co-lines,
+.tpl-bandeau .inv-band .inv-doc-meta { color: rgba(255, 255, 255, 0.85); }
+.tpl-bandeau .inv-band .inv-stamp { background: #fff; border-color: #fff; }
+.tpl-bandeau .inv-logo { background: #fff; padding: 4px; border-radius: 8px; }
 .inv-logo { max-width: 90px; max-height: 90px; object-fit: contain; }
 .inv-co-name { font-size: 1.15rem; font-weight: 800; color: var(--teal-dark); }
 .inv-co-lines { font-size: 0.8rem; color: #475569; margin-top: 4px; }
@@ -342,4 +356,6 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
   .no-print { display: none !important; }
   .content { overflow: visible; padding: 0; }
   .invoice-paper { box-shadow: none; border-radius: 0; padding: 0; }
+  /* le bandeau colle aux bords sans les marges négatives */
+  .tpl-bandeau .inv-band { margin: 0 0 18px; border-radius: 0; }
 }
