@@ -358,7 +358,10 @@
     } else {
       newDraft();
     }
-    $("#edit-title").textContent = existing ? "Modifier le document" : "Nouveau document";
+    // « existant » = déjà enregistré (possède un id). Une copie (id null) est traitée comme un nouveau document.
+    const isEditing = !!(existing && existing.id);
+    $("#edit-title").textContent = isEditing ? "Modifier le document" : "Nouveau document";
+    $("#doc-actions").hidden = !isEditing;
     populateDatalists();
 
     // type
@@ -655,6 +658,31 @@
     if (doc) openEdit(doc);
   }
 
+  // Duplique le document en cours : nouvelle copie non enregistrée (numéro/date/paiement réinitialisés)
+  function duplicateDoc() {
+    syncClientFromInputs();
+    const copy = JSON.parse(JSON.stringify(draft));
+    copy.id = null;
+    copy.number = null;
+    copy.date = new Date().toISOString();
+    copy.status = "impaye";
+    copy.paidAmount = 0;
+    openEdit(copy); // id null => traité comme un nouveau document
+    toast("Copie prête — enregistrez pour créer le document.");
+  }
+
+  // Supprime définitivement le document en cours
+  function deleteDoc() {
+    if (!draft.id) return;
+    const ok = window.confirm("Supprimer définitivement ce document ?\nCette action est irréversible.");
+    if (!ok) return;
+    documents = documents.filter((d) => d.id !== draft.id);
+    store.set(KEYS.docs, documents);
+    toast("Document supprimé");
+    renderHome();
+    showScreen("screen-home");
+  }
+
   // ================= PARTAGE / PDF =================
   function shareDoc() {
     // S'assure que le document est numéroté pour un partage cohérent
@@ -780,6 +808,8 @@
       syncClientFromInputs();
       renderPreview();
     });
+    $("#btn-duplicate").addEventListener("click", duplicateDoc);
+    $("#btn-delete").addEventListener("click", deleteDoc);
 
     // Aperçu
     $("#btn-preview-back").addEventListener("click", () => showScreen("screen-edit"));
