@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="description" content="FactoPro — Générez factures, proformas et devis en FCFA, hors ligne, en quelques secondes." />
+  <title>FactoPro</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ================= ÉCRAN 1 : ACCUEIL ================= -->
+  <section id="screen-home" class="screen is-active">
+    <header class="app-header">
+      <div class="brand">
+        <img id="home-logo" class="brand-logo" alt="Logo" hidden />
+        <div class="brand-fallback" id="home-logo-fallback">F</div>
+        <div class="brand-text">
+          <h1>FactoPro</h1>
+          <p id="home-company-name">Votre entreprise</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="btn-settings" aria-label="Réglages entreprise">⚙</button>
+    </header>
+
+    <main class="content">
+      <button class="btn btn-primary btn-lg" id="btn-new-doc">
+        <span class="btn-icon">＋</span> Nouveau document
+      </button>
+
+      <div class="section-title">
+        <h2>Documents récents</h2>
+        <span id="doc-count" class="pill">0</span>
+      </div>
+
+      <ul id="doc-list" class="doc-list"></ul>
+
+      <div id="doc-empty" class="empty-state">
+        <div class="empty-emoji">🧾</div>
+        <p>Aucun document pour l'instant.<br />Appuyez sur <strong>Nouveau document</strong> pour commencer.</p>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-ghost" id="btn-settings-2">⚙ Mon entreprise / logo</button>
+    </footer>
+  </section>
+
+  <!-- ================= ÉCRAN 2 : NOUVEAU / ÉDITION ================= -->
+  <section id="screen-edit" class="screen">
+    <header class="app-header sub">
+      <button class="icon-btn" id="btn-edit-back" aria-label="Retour">‹</button>
+      <h1 id="edit-title">Nouveau document</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <!-- Type de document -->
+      <div class="field">
+        <label class="field-label">Type de document</label>
+        <div class="segmented" id="doc-type">
+          <button type="button" class="seg is-active" data-type="facture">Facture</button>
+          <button type="button" class="seg" data-type="proforma">Proforma</button>
+          <button type="button" class="seg" data-type="devis">Devis</button>
+        </div>
+      </div>
+
+      <!-- Client -->
+      <div class="card">
+        <h3 class="card-title">Client</h3>
+        <div class="field">
+          <label class="field-label" for="client-name">Nom du client *</label>
+          <input id="client-name" type="text" placeholder="Ex. Boutique Aïcha" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="client-phone">Téléphone</label>
+          <input id="client-phone" type="tel" placeholder="Ex. +237 6 00 00 00 00" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="client-address">Adresse</label>
+          <input id="client-address" type="text" placeholder="Ville, quartier" />
+        </div>
+      </div>
+
+      <!-- Articles -->
+      <div class="card">
+        <h3 class="card-title">Articles</h3>
+        <div id="items-list"></div>
+        <button class="btn btn-outline btn-block" id="btn-add-item">＋ Ajouter une ligne</button>
+      </div>
+
+      <!-- Taxe -->
+      <div class="card">
+        <div class="row-between">
+          <div>
+            <h3 class="card-title" style="margin:0">Taxe (TVA)</h3>
+            <p class="muted small">Activez si vous facturez avec TVA.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="tax-enabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field" id="tax-rate-field" hidden>
+          <label class="field-label" for="tax-rate">Taux de TVA (%)</label>
+          <input id="tax-rate" type="number" inputmode="decimal" step="0.01" value="19.25" />
+        </div>
+      </div>
+
+      <!-- Totaux live -->
+      <div class="totals-preview">
+        <div class="row-between"><span>Total HT</span><strong id="edit-total-ht">0 FCFA</strong></div>
+        <div class="row-between" id="edit-tax-row" hidden><span>TVA</span><strong id="edit-total-tax">0 FCFA</strong></div>
+        <div class="row-between total-ttc"><span>Total TTC</span><strong id="edit-total-ttc">0 FCFA</strong></div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-primary btn-block" id="btn-preview">Voir l'aperçu →</button>
+    </footer>
+  </section>
+
+  <!-- ================= ÉCRAN 3 : APERÇU ================= -->
+  <section id="screen-preview" class="screen">
+    <header class="app-header sub no-print">
+      <button class="icon-btn" id="btn-preview-back" aria-label="Retour">‹</button>
+      <h1>Aperçu</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <div id="invoice-paper" class="invoice-paper">
+        <!-- rempli par JS -->
+      </div>
+    </main>
+
+    <footer class="app-footer no-print">
+      <button class="btn btn-outline" id="btn-save">💾 Enregistrer</button>
+      <button class="btn btn-primary" id="btn-share">📤 Partager PDF</button>
+    </footer>
+  </section>
+
+  <!-- ================= RÉGLAGES ENTREPRISE (modale plein écran) ================= -->
+  <section id="screen-settings" class="screen">
+    <header class="app-header sub">
+      <button class="icon-btn" id="btn-settings-back" aria-label="Retour">‹</button>
+      <h1>Mon entreprise</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <div class="card">
+        <h3 class="card-title">Logo</h3>
+        <div class="logo-uploader">
+          <div class="logo-preview" id="settings-logo-preview">
+            <img id="settings-logo-img" alt="Logo" hidden />
+            <span id="settings-logo-placeholder">Aucun logo</span>
+          </div>
+          <div class="logo-actions">
+            <label class="btn btn-outline btn-sm">
+              Choisir un logo
+              <input type="file" id="logo-input" accept="image/*" hidden />
+            </label>
+            <button class="btn btn-ghost btn-sm" id="btn-remove-logo">Retirer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Informations</h3>
+        <div class="field">
+          <label class="field-label" for="co-name">Nom de l'entreprise *</label>
+          <input id="co-name" type="text" placeholder="Ex. Ets FactoPro" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-phone">Téléphone</label>
+          <input id="co-phone" type="tel" placeholder="+237 6 00 00 00 00" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-email">Email</label>
+          <input id="co-email" type="email" placeholder="contact@exemple.com" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-address">Adresse</label>
+          <input id="co-address" type="text" placeholder="Ville, quartier" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-taxid">N° contribuable / RCCM</label>
+          <input id="co-taxid" type="text" placeholder="Optionnel" />
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-primary btn-block" id="btn-save-settings">Enregistrer</button>
+    </footer>
+  </section>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
