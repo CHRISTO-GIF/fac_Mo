@@ -11,6 +11,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 - **Carnet de clients & catalogue d'articles** : autocomplétion à la saisie (le tél/adresse du client et le prix de l'article se remplissent tout seuls), mémorisation automatique, écran de gestion (consulter / supprimer)
 - **Carnet d'articles** ligne par ligne (désignation, quantité, prix unitaire) avec totaux en direct
 - **TVA optionnelle** (par défaut 19,25 %), activable d'un geste
+- **Devise configurable** : FCFA (défaut), €, $, MAD, ₦, ₵ — avec le bon format (décimales et position du symbole)
 - **Modifier / dupliquer / supprimer** un document (dupliquer une facture récurrente, corriger, supprimer un brouillon)
 - **Numérotation automatique** par type : `FAC-2026-001`, `PRO-2026-001`, `DEV-2026-001`
 - **Suivi de paiement** des factures : 🔴 Impayé · 🟠 Partiel · 🟢 Payé (avec montant payé et reste dû)
@@ -57,5 +58,4 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 
 ## 🛣️ Pistes suivantes (idées)
 
-- Choix de la **devise** et de plusieurs **modèles** de facture
 - Modèles / couleurs de facture personnalisables

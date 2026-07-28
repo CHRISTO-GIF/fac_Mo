@@ -32,6 +32,7 @@
     email: "",
     address: "",
     taxId: "",
+    currency: "XOF",
     logo: "", // dataURL
   });
 
@@ -53,13 +54,26 @@
   const TYPE_PREFIX = { facture: "FAC", proforma: "PRO", devis: "DEV" };
   const STATUS_LABELS = { impaye: "Impayé", partiel: "Partiel", paye: "Payé" };
 
+  // Devises disponibles : { libellé, symbole, décimales, position du symbole }
+  const CURRENCIES = {
+    XOF: { label: "Franc CFA (FCFA)", symbol: "FCFA", decimals: 0, pos: "after" },
+    EUR: { label: "Euro (€)", symbol: "€", decimals: 2, pos: "after" },
+    USD: { label: "Dollar US ($)", symbol: "$", decimals: 2, pos: "before" },
+    MAD: { label: "Dirham marocain (MAD)", symbol: "MAD", decimals: 2, pos: "after" },
+    NGN: { label: "Naira (₦)", symbol: "₦", decimals: 2, pos: "before" },
+    GHS: { label: "Cedi (₵)", symbol: "₵", decimals: 2, pos: "before" },
+  };
+  const DEFAULT_CURRENCY = "XOF";
+
   // ---------- Utilitaires ----------
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   function fmtMoney(n) {
-    const v = Math.round(Number(n) || 0);
-    return v.toLocaleString("fr-FR").replace(/ | /g, " ") + " FCFA";
+    const cur = CURRENCIES[company.currency] || CURRENCIES[DEFAULT_CURRENCY];
+    const num = (Number(n) || 0)
+      .toLocaleString("fr-FR", { minimumFractionDigits: cur.decimals, maximumFractionDigits: cur.decimals });
+    return cur.pos === "before" ? cur.symbol + " " + num : num + " " + cur.symbol;
   }
 
   function fmtDate(iso) {
@@ -756,8 +770,18 @@
   }
 
   // ================= RÉGLAGES ENTREPRISE =================
+  function fillCurrencySelect() {
+    const sel = $("#co-currency");
+    if (!sel) return;
+    sel.innerHTML = Object.keys(CURRENCIES)
+      .map((code) => `<option value="${code}">${escapeHtml(CURRENCIES[code].label)}</option>`)
+      .join("");
+    sel.value = company.currency || DEFAULT_CURRENCY;
+  }
+
   function openSettings() {
     $("#co-name").value = company.name || "";
+    fillCurrencySelect();
     $("#co-phone").value = company.phone || "";
     $("#co-email").value = company.email || "";
     $("#co-address").value = company.address || "";
@@ -778,6 +802,7 @@
     company.email = $("#co-email").value.trim();
     company.address = $("#co-address").value.trim();
     company.taxId = $("#co-taxid").value.trim();
+    company.currency = $("#co-currency").value || DEFAULT_CURRENCY;
     store.set(KEYS.company, company);
     toast("Entreprise enregistrée ✓");
     renderHome();

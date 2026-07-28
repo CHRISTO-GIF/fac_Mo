@@ -152,11 +152,12 @@ html, body {
 .field { margin-bottom: 14px; }
 .field:last-child { margin-bottom: 0; }
 .field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-input {
+input, select {
   width: 100%; padding: 13px 14px; font-size: 1rem; font-family: inherit;
   border: 1.5px solid var(--line); border-radius: 11px; background: #fff; color: var(--ink);
 }
-input:focus { outline: none; border-color: var(--teal); }
+input:focus, select:focus { outline: none; border-color: var(--teal); }
+select { appearance: none; -webkit-appearance: none; background-image: none; }
 
 .muted { color: var(--muted); }
 .small { font-size: 0.82rem; }
