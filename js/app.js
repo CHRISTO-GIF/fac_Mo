@@ -710,18 +710,43 @@
     return lines.filter(Boolean).join("\n");
   }
 
+  // Rend l'aperçu en image PNG (via html2canvas, embarqué → hors ligne)
+  function buildInvoiceImageFile() {
+    return new Promise((resolve, reject) => {
+      if (typeof html2canvas !== "function") return reject(new Error("html2canvas absent"));
+      const node = $("#invoice-paper");
+      html2canvas(node, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false })
+        .then((canvas) => {
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error("toBlob null"));
+            resolve(new File([blob], `${draft.number || "document"}.png`, { type: "image/png" }));
+          }, "image/png");
+        })
+        .catch(reject);
+    });
+  }
+
   async function shareDoc() {
     if (!draft.number) draft.number = previewNumber(draft.type);
     const text = buildShareText();
 
-    // 1) Partage natif du résumé (WhatsApp, email, SMS…) en un tap
+    // 1) Partage de la facture en image (pièce jointe) — WhatsApp, email…
+    let file = null;
+    try { file = await buildInvoiceImageFile(); } catch (e) { file = null; }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: draft.number, text });
+        return;
+      } catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    // 2) Partage du résumé texte
     if (navigator.share) {
       try {
         await navigator.share({ title: draft.number, text });
         return;
       } catch (e) { if (e && e.name === "AbortError") return; }
     }
-    // 2) Repli : copie dans le presse-papier
+    // 3) Repli : copie dans le presse-papier
     try {
       await navigator.clipboard.writeText(text);
       toast("Résumé copié — collez-le dans WhatsApp.");

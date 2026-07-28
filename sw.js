@@ -1,10 +1,11 @@
 /* ================= FactoPro — Service Worker (mode hors ligne) ================= */
-const CACHE = "factopro-v1";
+const CACHE = "factopro-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/app.js",
+  "./js/vendor/html2canvas.min.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.png",
@@ -27,20 +28,16 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Stratégie « réseau d'abord » : version fraîche si en ligne, cache en secours hors ligne.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request)
-          .then((resp) => {
-            const copy = resp.clone();
-            caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});
-            return resp;
-          })
-          .catch(() => cached)
-      );
-    })
+    fetch(event.request)
+      .then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});
+        return resp;
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html")))
   );
 });

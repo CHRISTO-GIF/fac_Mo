@@ -17,7 +17,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 - **Tableau de bord** : total facturé, encaissé et reste à encaisser (calculés sur les factures)
 - **Filtres** sur l'accueil (Toutes / Impayées / Partielles / Payées) + pastille de statut par facture
 - **Aperçu professionnel** avec tampon de statut, puis **export PDF** via l'impression native du téléphone (🖨)
-- **Partage en un tap** (Web Share API) : envoie un résumé du document sur WhatsApp / email / SMS (repli sur copie dans le presse-papier)
+- **Partage en un tap** (Web Share API) : envoie la **facture en image** (pièce jointe, rendu via html2canvas embarqué) sur WhatsApp / email / SMS ; repli automatique sur un résumé texte puis sur la copie dans le presse-papier
 - **Sauvegarde & restauration** : export de toutes les données dans un fichier de secours (`.json`) et réimport (utile pour changer de téléphone ou éviter toute perte)
 - **Stockage local** (localStorage) : aucun compte, aucune connexion internet requise
 - **Installable** sur l'écran d'accueil (Android/iPhone) et **utilisable hors ligne** (service worker)
@@ -45,6 +45,7 @@ python3 -m http.server 8080
 index.html          Les 3 écrans (Accueil · Édition · Aperçu) + Réglages
 css/style.css       Design mobile-first + styles d'impression PDF
 js/app.js           Logique : stockage local, calculs, navigation, PDF
+js/vendor/          html2canvas (MIT) embarqué pour le partage en image
 manifest.json       Métadonnées PWA (nom, icônes, couleurs)
 sw.js               Service worker (cache hors ligne)
 icons/              Icônes de l'app (SVG + PNG 192/512 + maskable)
@@ -57,4 +58,4 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 ## 🛣️ Pistes suivantes (idées)
 
 - Choix de la **devise** et de plusieurs **modèles** de facture
-- Partage de la **facture en image / PDF** en pièce jointe (nécessite une bibliothèque de rendu embarquée)
+- Modèles / couleurs de facture personnalisables
