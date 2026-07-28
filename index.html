@@ -32,9 +32,33 @@
         <span class="btn-icon">＋</span> Nouveau document
       </button>
 
+      <!-- Tableau de bord (basé sur les factures) -->
+      <div id="stats" class="stats" hidden>
+        <div class="stat-tile">
+          <span class="stat-label">Facturé</span>
+          <strong id="stat-billed" class="stat-value">0 FCFA</strong>
+        </div>
+        <div class="stat-tile stat-paid">
+          <span class="stat-label">Encaissé</span>
+          <strong id="stat-paid" class="stat-value">0 FCFA</strong>
+        </div>
+        <div class="stat-tile stat-due">
+          <span class="stat-label">Reste à encaisser</span>
+          <strong id="stat-due" class="stat-value">0 FCFA</strong>
+        </div>
+      </div>
+
       <div class="section-title">
-        <h2>Documents récents</h2>
+        <h2>Documents</h2>
         <span id="doc-count" class="pill">0</span>
+      </div>
+
+      <!-- Filtres -->
+      <div id="filters" class="filters" hidden>
+        <button type="button" class="chip is-active" data-filter="tous">Tous</button>
+        <button type="button" class="chip" data-filter="impaye">Impayées</button>
+        <button type="button" class="chip" data-filter="partiel">Partielles</button>
+        <button type="button" class="chip" data-filter="paye">Payées</button>
       </div>
 
       <ul id="doc-list" class="doc-list"></ul>
@@ -108,6 +132,21 @@
         <div class="field" id="tax-rate-field" hidden>
           <label class="field-label" for="tax-rate">Taux de TVA (%)</label>
           <input id="tax-rate" type="number" inputmode="decimal" step="0.01" value="19.25" />
+        </div>
+      </div>
+
+      <!-- Statut de paiement (factures uniquement) -->
+      <div class="card" id="payment-card" hidden>
+        <h3 class="card-title">Statut de paiement</h3>
+        <div class="segmented" id="pay-status">
+          <button type="button" class="seg is-active" data-status="impaye">Impayé</button>
+          <button type="button" class="seg" data-status="partiel">Partiel</button>
+          <button type="button" class="seg" data-status="paye">Payé</button>
+        </div>
+        <div class="field" id="paid-amount-field" hidden style="margin-top:12px">
+          <label class="field-label" for="paid-amount">Montant déjà payé</label>
+          <input id="paid-amount" type="number" inputmode="decimal" step="any" min="0" value="0" />
+          <p class="muted small" id="balance-hint" style="margin:6px 0 0"></p>
         </div>
       </div>
 

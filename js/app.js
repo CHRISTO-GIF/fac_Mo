@@ -39,8 +39,12 @@
   // Brouillon en cours d'édition
   let draft = null;
 
+  // Filtre actif sur l'accueil
+  let currentFilter = "tous";
+
   const TYPE_LABELS = { facture: "Facture", proforma: "Proforma", devis: "Devis" };
   const TYPE_PREFIX = { facture: "FAC", proforma: "PRO", devis: "DEV" };
+  const STATUS_LABELS = { impaye: "Impayé", partiel: "Partiel", paye: "Payé" };
 
   // ---------- Utilitaires ----------
   const $ = (sel) => document.querySelector(sel);
@@ -101,20 +105,45 @@
     }
     $("#home-company-name").textContent = company.name || "Configurez votre entreprise";
 
-    // liste documents (récents en premier)
+    // tableau de bord + filtres
+    renderStats();
+    renderFilters();
+
+    // liste documents (récents en premier), filtrée
     const list = $("#doc-list");
     const empty = $("#doc-empty");
-    $("#doc-count").textContent = documents.length;
     list.innerHTML = "";
 
     if (documents.length === 0) {
       empty.hidden = false;
+      $("#doc-count").textContent = 0;
       return;
     }
     empty.hidden = true;
 
     const sorted = [...documents].sort((a, b) => new Date(b.date) - new Date(a.date));
-    for (const doc of sorted) {
+    const visible = sorted.filter((doc) => {
+      if (currentFilter === "tous") return true;
+      // les filtres de statut ne concernent que les factures
+      return doc.type === "facture" && (doc.status || "impaye") === currentFilter;
+    });
+    $("#doc-count").textContent = visible.length;
+
+    if (visible.length === 0) {
+      const li = document.createElement("li");
+      li.className = "empty-state";
+      li.style.padding = "24px 12px";
+      li.innerHTML = "<p>Aucune facture dans ce filtre.</p>";
+      list.appendChild(li);
+      return;
+    }
+
+    for (const doc of visible) {
+      const isFacture = doc.type === "facture";
+      const st = doc.status || "impaye";
+      const statusChip = isFacture
+        ? `<span class="status-chip ${st}">${STATUS_LABELS[st]}</span>`
+        : "";
       const li = document.createElement("li");
       li.className = "doc-item";
       li.dataset.id = doc.id;
@@ -123,12 +152,43 @@
         <div class="doc-main">
           <div class="doc-client">${escapeHtml(doc.client.name || "Sans nom")}</div>
           <div class="doc-meta">${escapeHtml(doc.number)} · ${fmtDate(doc.date)}</div>
+          ${statusChip}
         </div>
         <div class="doc-amount">${fmtMoney(computeTotals(doc).ttc)}</div>
       `;
       li.addEventListener("click", () => openDocument(doc.id));
       list.appendChild(li);
     }
+  }
+
+  // Tableau de bord : totaux calculés sur les factures
+  function renderStats() {
+    const factures = documents.filter((d) => d.type === "facture");
+    const statsEl = $("#stats");
+    if (factures.length === 0) {
+      statsEl.hidden = true;
+      return;
+    }
+    let billed = 0, paid = 0;
+    for (const f of factures) {
+      const ttc = computeTotals(f).ttc;
+      billed += ttc;
+      paid += Math.min(Number(f.paidAmount) || 0, ttc);
+    }
+    const due = Math.max(0, billed - paid);
+    $("#stat-billed").textContent = fmtMoney(billed);
+    $("#stat-paid").textContent = fmtMoney(paid);
+    $("#stat-due").textContent = fmtMoney(due);
+    statsEl.hidden = false;
+  }
+
+  // Affiche les filtres seulement s'il y a au moins une facture
+  function renderFilters() {
+    const hasFacture = documents.some((d) => d.type === "facture");
+    $("#filters").hidden = !hasFacture;
+    $$("#filters .chip").forEach((c) =>
+      c.classList.toggle("is-active", c.dataset.filter === currentFilter)
+    );
   }
 
   // ================= CALCULS =================
@@ -152,7 +212,14 @@
       items: [{ desc: "", qty: 1, price: 0 }],
       taxEnabled: false,
       taxRate: 19.25,
+      status: "impaye",
+      paidAmount: 0,
     };
+  }
+
+  // Solde restant dû (factures)
+  function balanceOf(doc) {
+    return Math.max(0, computeTotals(doc).ttc - (Number(doc.paidAmount) || 0));
   }
 
   function openEdit(existing) {
@@ -176,9 +243,30 @@
     $("#tax-rate").value = draft.taxRate;
     $("#tax-rate-field").hidden = !draft.taxEnabled;
 
+    // statut de paiement
+    if (!draft.status) draft.status = "impaye";
+    $$("#pay-status .seg").forEach((b) =>
+      b.classList.toggle("is-active", b.dataset.status === draft.status)
+    );
+    $("#paid-amount").value = draft.paidAmount || 0;
+
     renderItems();
     updateEditTotals();
+    updatePaymentUI();
     showScreen("screen-edit");
+  }
+
+  // Affiche la carte paiement (factures seulement) et le champ « montant payé »
+  function updatePaymentUI() {
+    const isFacture = draft.type === "facture";
+    $("#payment-card").hidden = !isFacture;
+    const showAmount = isFacture && draft.status === "partiel";
+    $("#paid-amount-field").hidden = !showAmount;
+    if (showAmount) {
+      const ttc = computeTotals(draft).ttc;
+      const reste = Math.max(0, ttc - (Number(draft.paidAmount) || 0));
+      $("#balance-hint").textContent = "Reste à payer : " + fmtMoney(reste);
+    }
   }
 
   function renderItems() {
@@ -238,6 +326,8 @@
     $("#edit-total-tax").textContent = fmtMoney(t.tax);
     $("#edit-total-ttc").textContent = fmtMoney(t.ttc);
     $("#edit-tax-row").hidden = !draft.taxEnabled;
+    // le solde restant dépend du TTC : on rafraîchit l'indice de paiement
+    if (draft.type === "facture" && draft.status === "partiel") updatePaymentUI();
   }
 
   function syncClientFromInputs() {
@@ -246,6 +336,31 @@
     draft.client.address = $("#client-address").value.trim();
     draft.taxEnabled = $("#tax-enabled").checked;
     draft.taxRate = Number($("#tax-rate").value) || 0;
+    if (draft.type === "facture" && draft.status === "partiel") {
+      draft.paidAmount = Number($("#paid-amount").value) || 0;
+    }
+  }
+
+  // Normalise le statut/paiement au moment de l'enregistrement
+  function normalizePayment() {
+    if (draft.type !== "facture") {
+      draft.status = "impaye";
+      draft.paidAmount = 0;
+      return;
+    }
+    const ttc = computeTotals(draft).ttc;
+    if (draft.status === "paye") {
+      draft.paidAmount = ttc;
+    } else if (draft.status === "impaye") {
+      draft.paidAmount = 0;
+    } else {
+      // partiel : borne entre 0 et le TTC
+      let p = Number(draft.paidAmount) || 0;
+      p = Math.max(0, Math.min(p, ttc));
+      draft.paidAmount = p;
+      if (p >= ttc && ttc > 0) draft.status = "paye";
+      else if (p <= 0) draft.status = "impaye";
+    }
   }
 
   // ================= ÉCRAN APERÇU =================
@@ -283,6 +398,22 @@
       draft.client.address && escapeHtml(draft.client.address),
     ].filter(Boolean).join("<br />");
 
+    // Paiement (factures uniquement) : montant payé effectif + reste
+    const showPay = draft.type === "facture";
+    let effPaid = 0;
+    if (showPay) {
+      if (draft.status === "paye") effPaid = t.ttc;
+      else if (draft.status === "partiel") effPaid = Math.max(0, Math.min(Number(draft.paidAmount) || 0, t.ttc));
+    }
+    const reste = Math.max(0, t.ttc - effPaid);
+    const stampHtml = showPay
+      ? `<div class="inv-stamp ${draft.status}">${STATUS_LABELS[draft.status]}</div>`
+      : "";
+    const payRows = showPay && draft.status !== "impaye"
+      ? `<div class="row-between"><span>Payé</span><span>${fmtMoney(effPaid)}</span></div>` +
+        (reste > 0 ? `<div class="row-between"><span>Reste à payer</span><span>${fmtMoney(reste)}</span></div>` : "")
+      : "";
+
     $("#invoice-paper").innerHTML = `
       <div class="inv-head">
         <div>
@@ -293,6 +424,7 @@
         <div>
           <div class="inv-doc-type">${TYPE_LABELS[draft.type]}</div>
           <div class="inv-doc-meta">N° ${escapeHtml(number)}<br />${fmtDate(draft.date)}</div>
+          ${stampHtml}
         </div>
       </div>
 
@@ -320,6 +452,7 @@
         <div class="row-between"><span>Total HT</span><span>${fmtMoney(t.ht)}</span></div>
         ${draft.taxEnabled ? `<div class="row-between"><span>TVA (${draft.taxRate}%)</span><span>${fmtMoney(t.tax)}</span></div>` : ""}
         <div class="row-between grand"><span>Total TTC</span><span>${fmtMoney(t.ttc)}</span></div>
+        ${payRows}
       </div>
 
       <div class="inv-foot">
@@ -339,6 +472,7 @@
   // ================= ENREGISTREMENT =================
   function saveDraft() {
     syncClientFromInputs();
+    normalizePayment();
     if (!draft.client.name) {
       toast("Ajoutez au moins le nom du client.");
       showScreen("screen-edit");
@@ -435,6 +569,13 @@
     });
     $("#btn-settings").addEventListener("click", openSettings);
     $("#btn-settings-2").addEventListener("click", openSettings);
+    // filtres de l'accueil
+    $$("#filters .chip").forEach((c) =>
+      c.addEventListener("click", () => {
+        currentFilter = c.dataset.filter;
+        renderHome();
+      })
+    );
 
     // Édition
     $("#btn-edit-back").addEventListener("click", () => { renderHome(); showScreen("screen-home"); });
@@ -442,8 +583,21 @@
       b.addEventListener("click", () => {
         draft.type = b.dataset.type;
         $$("#doc-type .seg").forEach((x) => x.classList.toggle("is-active", x === b));
+        updatePaymentUI();
       })
     );
+    // statut de paiement
+    $$("#pay-status .seg").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.status = b.dataset.status;
+        $$("#pay-status .seg").forEach((x) => x.classList.toggle("is-active", x === b));
+        updatePaymentUI();
+      })
+    );
+    $("#paid-amount").addEventListener("input", (e) => {
+      draft.paidAmount = Number(e.target.value) || 0;
+      updatePaymentUI();
+    });
     $("#btn-add-item").addEventListener("click", () => {
       draft.items.push({ desc: "", qty: 1, price: 0 });
       renderItems();

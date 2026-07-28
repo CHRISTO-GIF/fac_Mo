@@ -11,7 +11,10 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 - **Carnet d'articles** ligne par ligne (désignation, quantité, prix unitaire) avec totaux en direct
 - **TVA optionnelle** (par défaut 19,25 %), activable d'un geste
 - **Numérotation automatique** par type : `FAC-2026-001`, `PRO-2026-001`, `DEV-2026-001`
-- **Aperçu professionnel** puis **export PDF** via l'impression native du téléphone (WhatsApp, email, etc.)
+- **Suivi de paiement** des factures : 🔴 Impayé · 🟠 Partiel · 🟢 Payé (avec montant payé et reste dû)
+- **Tableau de bord** : total facturé, encaissé et reste à encaisser (calculés sur les factures)
+- **Filtres** sur l'accueil (Toutes / Impayées / Partielles / Payées) + pastille de statut par facture
+- **Aperçu professionnel** avec tampon de statut, puis **export PDF** via l'impression native du téléphone (WhatsApp, email, etc.)
 - **Stockage local** (localStorage) : aucun compte, aucune connexion internet requise
 - **Installable** sur l'écran d'accueil (Android/iPhone) et **utilisable hors ligne** (service worker)
 
@@ -47,9 +50,10 @@ icons/              Icônes de l'app (SVG + PNG 192/512 + maskable)
 
 Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de l'utilisateur, dans le stockage local du navigateur. Rien n'est envoyé sur un serveur.
 
-## 🛣️ Pistes v2 (idées)
+## 🛣️ Pistes suivantes (idées)
 
 - Carnet de **clients** et **catalogue d'articles** réutilisables
-- Suivi **payé / impayé** et statistiques simples
+- Modifier / supprimer / dupliquer un document
 - Choix de la **devise** et de plusieurs **modèles** de facture
+- Partage direct via la **Web Share API** (au lieu de l'impression)
 - Sauvegarde / export des données (fichier de secours)
