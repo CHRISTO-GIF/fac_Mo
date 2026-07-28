@@ -17,6 +17,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 - **Tableau de bord** : total facturé, encaissé et reste à encaisser (calculés sur les factures)
 - **Filtres** sur l'accueil (Toutes / Impayées / Partielles / Payées) + pastille de statut par facture
 - **Aperçu professionnel** avec tampon de statut, puis **export PDF** via l'impression native du téléphone (WhatsApp, email, etc.)
+- **Sauvegarde & restauration** : export de toutes les données dans un fichier de secours (`.json`) et réimport (utile pour changer de téléphone ou éviter toute perte)
 - **Stockage local** (localStorage) : aucun compte, aucune connexion internet requise
 - **Installable** sur l'écran d'accueil (Android/iPhone) et **utilisable hors ligne** (service worker)
 
@@ -56,4 +57,3 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 
 - Choix de la **devise** et de plusieurs **modèles** de facture
 - Partage direct via la **Web Share API** (au lieu de l'impression)
-- Sauvegarde / export des données (fichier de secours)

@@ -244,6 +244,21 @@
           <input id="co-taxid" type="text" placeholder="Optionnel" />
         </div>
       </div>
+
+      <!-- Sauvegarde / restauration -->
+      <div class="card">
+        <h3 class="card-title">Sauvegarde des données</h3>
+        <p class="muted small" style="margin:0 0 12px">
+          Vos données sont stockées sur cet appareil. Exportez un fichier de secours pour ne rien perdre,
+          ou importez-le sur un autre téléphone.
+        </p>
+        <div class="doc-actions" style="margin:0">
+          <button type="button" class="btn btn-outline" id="btn-export">⬇ Exporter</button>
+          <label class="btn btn-outline" style="cursor:pointer">⬆ Importer
+            <input type="file" id="import-input" accept="application/json,.json" hidden />
+          </label>
+        </div>
+      </div>
     </main>
 
     <footer class="app-footer">

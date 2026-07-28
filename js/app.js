@@ -720,6 +720,67 @@
     showScreen("screen-home");
   }
 
+  // ================= SAUVEGARDE / RESTAURATION =================
+  function exportData() {
+    const payload = {
+      app: "FactoPro",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: { company, documents, counters, clients, articles },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const day = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `factopro-sauvegarde-${day}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("Sauvegarde exportée ✓");
+  }
+
+  function importData(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let d;
+      try {
+        const parsed = JSON.parse(e.target.result);
+        d = parsed && parsed.data ? parsed.data : parsed; // tolère un JSON de données brut
+      } catch (err) {
+        toast("Fichier de sauvegarde invalide.");
+        return;
+      }
+      if (!d || typeof d !== "object" || !Array.isArray(d.documents)) {
+        toast("Fichier de sauvegarde non reconnu.");
+        return;
+      }
+      const ok = window.confirm(
+        "Importer cette sauvegarde ?\nElle remplacera toutes vos données actuelles (documents, clients, articles, entreprise)."
+      );
+      if (!ok) return;
+
+      company = d.company && typeof d.company === "object" ? d.company : company;
+      documents = Array.isArray(d.documents) ? d.documents : [];
+      counters = d.counters && typeof d.counters === "object" ? d.counters : { facture: 0, proforma: 0, devis: 0 };
+      clients = Array.isArray(d.clients) ? d.clients : [];
+      articles = Array.isArray(d.articles) ? d.articles : [];
+
+      store.set(KEYS.company, company);
+      store.set(KEYS.docs, documents);
+      store.set(KEYS.counters, counters);
+      store.set(KEYS.clients, clients);
+      store.set(KEYS.articles, articles);
+
+      toast("Sauvegarde importée ✓");
+      renderHome();
+      showScreen("screen-home");
+    };
+    reader.readAsText(file);
+  }
+
   function handleLogoFile(file) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
@@ -819,6 +880,11 @@
     // Réglages
     $("#btn-settings-back").addEventListener("click", () => { renderHome(); showScreen("screen-home"); });
     $("#btn-save-settings").addEventListener("click", saveSettings);
+    $("#btn-export").addEventListener("click", exportData);
+    $("#import-input").addEventListener("change", (e) => {
+      importData(e.target.files[0]);
+      e.target.value = ""; // permet de réimporter le même fichier
+    });
     $("#logo-input").addEventListener("change", (e) => handleLogoFile(e.target.files[0]));
     $("#btn-remove-logo").addEventListener("click", () => {
       company.logo = "";
