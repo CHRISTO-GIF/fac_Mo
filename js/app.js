@@ -51,6 +51,8 @@
 
   // Filtre actif sur l'accueil
   let currentFilter = "tous";
+  // Recherche active sur l'accueil
+  let currentSearch = "";
 
   const TYPE_LABELS = { facture: "Facture", proforma: "Proforma", devis: "Devis" };
   const TYPE_PREFIX = { facture: "FAC", proforma: "PRO", devis: "DEV" };
@@ -281,9 +283,10 @@
     }
     $("#home-company-name").textContent = company.name || "Configurez votre entreprise";
 
-    // tableau de bord + filtres
+    // tableau de bord + filtres + recherche
     renderStats();
     renderFilters();
+    $("#search-bar").hidden = documents.length === 0;
 
     // liste documents (récents en premier), filtrée
     const list = $("#doc-list");
@@ -297,11 +300,19 @@
     }
     empty.hidden = true;
 
+    const q = norm(currentSearch);
     const sorted = [...documents].sort((a, b) => new Date(b.date) - new Date(a.date));
     const visible = sorted.filter((doc) => {
-      if (currentFilter === "tous") return true;
-      // les filtres de statut ne concernent que les factures
-      return doc.type === "facture" && (doc.status || "impaye") === currentFilter;
+      // filtre de statut (ne concerne que les factures)
+      if (currentFilter !== "tous" && !(doc.type === "facture" && (doc.status || "impaye") === currentFilter)) {
+        return false;
+      }
+      // recherche : client, numéro ou type
+      if (q) {
+        const hay = norm(`${doc.client && doc.client.name} ${doc.number} ${TYPE_LABELS[doc.type]}`);
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
     $("#doc-count").textContent = visible.length;
 
@@ -309,7 +320,7 @@
       const li = document.createElement("li");
       li.className = "empty-state";
       li.style.padding = "24px 12px";
-      li.innerHTML = "<p>Aucune facture dans ce filtre.</p>";
+      li.innerHTML = q ? "<p>Aucun document ne correspond à votre recherche.</p>" : "<p>Aucune facture dans ce filtre.</p>";
       list.appendChild(li);
       return;
     }
@@ -979,6 +990,11 @@
         renderHome();
       })
     );
+    // recherche
+    $("#search-input").addEventListener("input", (e) => {
+      currentSearch = e.target.value;
+      renderHome();
+    });
 
     // Carnet
     $("#btn-catalog-back").addEventListener("click", () => { showScreen("screen-home"); });

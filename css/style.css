@@ -301,6 +301,10 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
 .stat-paid .stat-value { color: #16a34a; }
 .stat-due .stat-value { color: #dc2626; }
 
+/* ---------- Recherche ---------- */
+.search-bar { margin-bottom: 10px; }
+.search-bar input { padding-left: 14px; }
+
 /* ---------- Filtres ---------- */
 .filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 6px; }
 .chip {

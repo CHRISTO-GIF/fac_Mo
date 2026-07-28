@@ -18,7 +18,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 - **Numérotation automatique** par type : `FAC-2026-001`, `PRO-2026-001`, `DEV-2026-001`
 - **Suivi de paiement** des factures : 🔴 Impayé · 🟠 Partiel · 🟢 Payé (avec montant payé et reste dû)
 - **Tableau de bord** : total facturé, encaissé et reste à encaisser (calculés sur les factures)
-- **Filtres** sur l'accueil (Toutes / Impayées / Partielles / Payées) + pastille de statut par facture
+- **Recherche** (client, numéro, type) et **filtres** sur l'accueil (Toutes / Impayées / Partielles / Payées) + pastille de statut par facture
 - **Aperçu professionnel** avec tampon de statut, puis **export PDF** via l'impression native du téléphone (🖨)
 - **Partage en un tap** (Web Share API) : envoie la **facture en image** (pièce jointe, rendu via html2canvas embarqué) sur WhatsApp / email / SMS ; repli automatique sur un résumé texte puis sur la copie dans le presse-papier
 - **Sauvegarde & restauration** : export de toutes les données dans un fichier de secours (`.json`) et réimport (utile pour changer de téléphone ou éviter toute perte)
@@ -61,4 +61,4 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 ## 🛣️ Pistes suivantes (idées)
 
 - Modèles de facture supplémentaires
-- Recherche dans les documents
+- Rappels d'échéance pour les impayés
