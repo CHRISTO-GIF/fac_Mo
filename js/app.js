@@ -33,6 +33,7 @@
     address: "",
     taxId: "",
     currency: "XOF",
+    accent: "#0f766e",
     logo: "", // dataURL
   });
 
@@ -65,6 +66,11 @@
   };
   const DEFAULT_CURRENCY = "XOF";
 
+  // Couleurs d'accent préréglées
+  const DEFAULT_ACCENT = "#0f766e";
+  const ACCENT_PRESETS = ["#0f766e", "#1d4ed8", "#4338ca", "#7c3aed", "#15803d", "#c2410c", "#b91c1c", "#334155"];
+  let pendingAccent = DEFAULT_ACCENT; // couleur en cours de prévisualisation dans les réglages
+
   // ---------- Utilitaires ----------
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -74,6 +80,31 @@
     const num = (Number(n) || 0)
       .toLocaleString("fr-FR", { minimumFractionDigits: cur.decimals, maximumFractionDigits: cur.decimals });
     return cur.pos === "before" ? cur.symbol + " " + num : num + " " + cur.symbol;
+  }
+
+  // ---------- Couleur d'accent (thème) ----------
+  function hexToRgb(hex) {
+    let h = String(hex || "").replace("#", "");
+    if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+    const n = parseInt(h, 16);
+    if (isNaN(n)) return { r: 15, g: 118, b: 110 };
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  function toHex(x) {
+    return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0");
+  }
+  // Mélange la couleur vers 0 (noir) ou 255 (blanc) selon amt (0..1)
+  function mixToward(hex, target, amt) {
+    const c = hexToRgb(hex);
+    return "#" + toHex(c.r + (target - c.r) * amt) + toHex(c.g + (target - c.g) * amt) + toHex(c.b + (target - c.b) * amt);
+  }
+  function applyAccent(hex) {
+    const root = document.documentElement;
+    root.style.setProperty("--teal", hex);
+    root.style.setProperty("--teal-dark", mixToward(hex, 0, 0.22));
+    root.style.setProperty("--teal-light", mixToward(hex, 255, 0.82));
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", hex);
   }
 
   function fmtDate(iso) {
@@ -779,9 +810,36 @@
     sel.value = company.currency || DEFAULT_CURRENCY;
   }
 
+  // Construit les pastilles de couleur et met en surbrillance la couleur active
+  function markActiveSwatch(hex) {
+    $$("#accent-swatches .swatch").forEach((s) =>
+      s.classList.toggle("is-active", (s.dataset.color || "").toLowerCase() === String(hex).toLowerCase())
+    );
+  }
+  function fillAccentSwatches() {
+    const wrap = $("#accent-swatches");
+    if (!wrap) return;
+    wrap.innerHTML = ACCENT_PRESETS
+      .map((c) => `<button type="button" class="swatch" data-color="${c}" style="background:${c}" aria-label="Couleur ${c}"></button>`)
+      .join("");
+    wrap.querySelectorAll(".swatch").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        pendingAccent = btn.dataset.color;
+        applyAccent(pendingAccent);
+        $("#accent-custom").value = pendingAccent;
+        markActiveSwatch(pendingAccent);
+      })
+    );
+  }
+
   function openSettings() {
     $("#co-name").value = company.name || "";
     fillCurrencySelect();
+    // couleur d'accent
+    pendingAccent = company.accent || DEFAULT_ACCENT;
+    fillAccentSwatches();
+    $("#accent-custom").value = pendingAccent;
+    markActiveSwatch(pendingAccent);
     $("#co-phone").value = company.phone || "";
     $("#co-email").value = company.email || "";
     $("#co-address").value = company.address || "";
@@ -803,7 +861,9 @@
     company.address = $("#co-address").value.trim();
     company.taxId = $("#co-taxid").value.trim();
     company.currency = $("#co-currency").value || DEFAULT_CURRENCY;
+    company.accent = pendingAccent || DEFAULT_ACCENT;
     store.set(KEYS.company, company);
+    applyAccent(company.accent);
     toast("Entreprise enregistrée ✓");
     renderHome();
     showScreen("screen-home");
@@ -863,6 +923,7 @@
       store.set(KEYS.clients, clients);
       store.set(KEYS.articles, articles);
 
+      applyAccent(company.accent || DEFAULT_ACCENT);
       toast("Sauvegarde importée ✓");
       renderHome();
       showScreen("screen-home");
@@ -968,8 +1029,17 @@
     $("#btn-share").addEventListener("click", shareDoc);
 
     // Réglages
-    $("#btn-settings-back").addEventListener("click", () => { renderHome(); showScreen("screen-home"); });
+    $("#btn-settings-back").addEventListener("click", () => {
+      applyAccent(company.accent || DEFAULT_ACCENT); // annule la prévisualisation non enregistrée
+      renderHome();
+      showScreen("screen-home");
+    });
     $("#btn-save-settings").addEventListener("click", saveSettings);
+    $("#accent-custom").addEventListener("input", (e) => {
+      pendingAccent = e.target.value;
+      applyAccent(pendingAccent);
+      markActiveSwatch(pendingAccent);
+    });
     $("#btn-export").addEventListener("click", exportData);
     $("#import-input").addEventListener("change", (e) => {
       importData(e.target.files[0]);
@@ -985,6 +1055,7 @@
 
   // ================= INIT =================
   function init() {
+    applyAccent(company.accent || DEFAULT_ACCENT);
     bindEvents();
     renderHome();
     showScreen("screen-home");

@@ -8,6 +8,7 @@ Application mobile (PWA) de génération de **factures**, **proformas** et **dev
 
 - **3 types de documents** au choix : Facture · Proforma · Devis (via un simple sélecteur)
 - **Logo + infos entreprise** saisis une seule fois, puis réutilisés automatiquement
+- **Couleur d'accent personnalisable** (préréglages ou couleur libre) appliquée à l'app **et** aux factures — à votre image de marque
 - **Carnet de clients & catalogue d'articles** : autocomplétion à la saisie (le tél/adresse du client et le prix de l'article se remplissent tout seuls), mémorisation automatique, écran de gestion (consulter / supprimer)
 - **Carnet d'articles** ligne par ligne (désignation, quantité, prix unitaire) avec totaux en direct
 - **TVA optionnelle** (par défaut 19,25 %), activable d'un geste
@@ -58,4 +59,4 @@ Toutes les données (entreprise, logo, documents) restent **sur l'appareil** de 
 
 ## 🛣️ Pistes suivantes (idées)
 
-- Modèles / couleurs de facture personnalisables
+- Second modèle de mise en page de facture

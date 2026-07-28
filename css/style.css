@@ -158,6 +158,15 @@ input, select {
 }
 input:focus, select:focus { outline: none; border-color: var(--teal); }
 select { appearance: none; -webkit-appearance: none; background-image: none; }
+input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
+
+/* Pastilles de couleur d'accent */
+.swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+.swatch {
+  width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--line);
+}
+.swatch.is-active { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
 
 .muted { color: var(--muted); }
 .small { font-size: 0.82rem; }
