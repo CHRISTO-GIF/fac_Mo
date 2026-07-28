@@ -211,18 +211,32 @@
 
     <main class="content">
       <div class="card">
-        <h3 class="card-title">Logo</h3>
+        <h3 class="card-title">Logos</h3>
+        <p class="muted small" style="margin:0 0 12px">Ajoutez un logo, ou deux. Avec deux logos, les infos de l'entreprise sont centrées entre eux.</p>
         <div class="logo-uploader">
           <div class="logo-preview" id="settings-logo-preview">
-            <img id="settings-logo-img" alt="Logo" hidden />
-            <span id="settings-logo-placeholder">Aucun logo</span>
+            <img id="settings-logo-img" alt="Logo 1" hidden />
+            <span id="settings-logo-placeholder">Logo 1</span>
           </div>
           <div class="logo-actions">
             <label class="btn btn-outline btn-sm">
-              Choisir un logo
+              Choisir
               <input type="file" id="logo-input" accept="image/*" hidden />
             </label>
             <button class="btn btn-ghost btn-sm" id="btn-remove-logo">Retirer</button>
+          </div>
+        </div>
+        <div class="logo-uploader" style="margin-top:14px">
+          <div class="logo-preview" id="settings-logo2-preview">
+            <img id="settings-logo2-img" alt="Logo 2" hidden />
+            <span id="settings-logo2-placeholder">Logo 2</span>
+          </div>
+          <div class="logo-actions">
+            <label class="btn btn-outline btn-sm">
+              Choisir
+              <input type="file" id="logo2-input" accept="image/*" hidden />
+            </label>
+            <button class="btn btn-ghost btn-sm" id="btn-remove-logo2">Retirer</button>
           </div>
         </div>
       </div>

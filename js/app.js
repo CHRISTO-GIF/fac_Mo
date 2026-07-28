@@ -35,7 +35,8 @@
     currency: "XOF",
     accent: "#0f766e",
     template: "classique",
-    logo: "", // dataURL
+    logo: "", // dataURL (logo 1)
+    logo2: "", // dataURL (logo 2, optionnel)
   });
 
   let documents = store.get(KEYS.docs, []); // liste des documents enregistrés
@@ -623,19 +624,38 @@
         (reste > 0 ? `<div class="row-between"><span>Reste à payer</span><span>${fmtMoney(reste)}</span></div>` : "")
       : "";
 
-    // En-tête selon le modèle choisi (classique ou bandeau)
+    // En-tête selon le modèle (classique / bandeau) et le nombre de logos
     const tpl = company.template || "classique";
-    const headLeft =
-      `${logoHtml}` +
-      `<div class="inv-co-name">${escapeHtml(co.name || "Votre entreprise")}</div>` +
-      `<div class="inv-co-lines">${coLines}</div>`;
-    const headRight =
-      `<div class="inv-doc-type">${TYPE_LABELS[draft.type]}</div>` +
-      `<div class="inv-doc-meta">N° ${escapeHtml(number)}<br />${fmtDate(draft.date)}</div>` +
-      `${stampHtml}`;
-    const headHtml = tpl === "bandeau"
-      ? `<div class="inv-band"><div>${headLeft}</div><div style="text-align:right">${headRight}</div></div>`
-      : `<div class="inv-head"><div>${headLeft}</div><div>${headRight}</div></div>`;
+    const twoLogos = !!(co.logo && co.logo2);
+    let headHtml;
+    if (twoLogos) {
+      // Deux logos : infos entreprise centrées entre les deux
+      const wrapClass = tpl === "bandeau" ? "inv-band" : "inv-head";
+      const center =
+        `<div class="inv-co-name">${escapeHtml(co.name || "Votre entreprise")}</div>` +
+        `<div class="inv-co-lines">${coLines}</div>` +
+        `<div class="inv-doc-type" style="margin-top:6px">${TYPE_LABELS[draft.type]}</div>` +
+        `<div class="inv-doc-meta">N° ${escapeHtml(number)} · ${fmtDate(draft.date)}</div>` +
+        `${stampHtml}`;
+      headHtml =
+        `<div class="${wrapClass} inv-head--2">` +
+        `<img class="inv-two-logo" src="${co.logo}" alt="logo" />` +
+        `<div class="inv-co-center">${center}</div>` +
+        `<img class="inv-two-logo" src="${co.logo2}" alt="logo" />` +
+        `</div>`;
+    } else {
+      const headLeft =
+        `${logoHtml}` +
+        `<div class="inv-co-name">${escapeHtml(co.name || "Votre entreprise")}</div>` +
+        `<div class="inv-co-lines">${coLines}</div>`;
+      const headRight =
+        `<div class="inv-doc-type">${TYPE_LABELS[draft.type]}</div>` +
+        `<div class="inv-doc-meta">N° ${escapeHtml(number)}<br />${fmtDate(draft.date)}</div>` +
+        `${stampHtml}`;
+      headHtml = tpl === "bandeau"
+        ? `<div class="inv-band"><div>${headLeft}</div><div style="text-align:right">${headRight}</div></div>`
+        : `<div class="inv-head"><div>${headLeft}</div><div>${headRight}</div></div>`;
+    }
 
     const paper = $("#invoice-paper");
     paper.className = "invoice-paper tpl-" + tpl;
@@ -864,14 +884,21 @@
     $("#co-email").value = company.email || "";
     $("#co-address").value = company.address || "";
     $("#co-taxid").value = company.taxId || "";
-    const img = $("#settings-logo-img");
-    const ph = $("#settings-logo-placeholder");
-    if (company.logo) {
-      img.src = company.logo; img.hidden = false; ph.hidden = true;
+    renderLogoPreview(1);
+    renderLogoPreview(2);
+    showScreen("screen-settings");
+  }
+
+  // Affiche l'aperçu d'un logo (slot 1 ou 2) dans les réglages
+  function renderLogoPreview(slot) {
+    const data = slot === 2 ? company.logo2 : company.logo;
+    const img = $(slot === 2 ? "#settings-logo2-img" : "#settings-logo-img");
+    const ph = $(slot === 2 ? "#settings-logo2-placeholder" : "#settings-logo-placeholder");
+    if (data) {
+      img.src = data; img.hidden = false; ph.hidden = true;
     } else {
       img.hidden = true; ph.hidden = false;
     }
-    showScreen("screen-settings");
   }
 
   function saveSettings() {
@@ -953,7 +980,7 @@
     reader.readAsText(file);
   }
 
-  function handleLogoFile(file) {
+  function handleLogoFile(file, slot) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       toast("Logo trop lourd (max 2 Mo).");
@@ -961,10 +988,9 @@
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-      company.logo = e.target.result;
-      const img = $("#settings-logo-img");
-      const ph = $("#settings-logo-placeholder");
-      img.src = company.logo; img.hidden = false; ph.hidden = true;
+      if (slot === 2) company.logo2 = e.target.result;
+      else company.logo = e.target.result;
+      renderLogoPreview(slot);
     };
     reader.readAsDataURL(file);
   }
@@ -1078,11 +1104,15 @@
       importData(e.target.files[0]);
       e.target.value = ""; // permet de réimporter le même fichier
     });
-    $("#logo-input").addEventListener("change", (e) => handleLogoFile(e.target.files[0]));
+    $("#logo-input").addEventListener("change", (e) => handleLogoFile(e.target.files[0], 1));
     $("#btn-remove-logo").addEventListener("click", () => {
       company.logo = "";
-      $("#settings-logo-img").hidden = true;
-      $("#settings-logo-placeholder").hidden = false;
+      renderLogoPreview(1);
+    });
+    $("#logo2-input").addEventListener("change", (e) => handleLogoFile(e.target.files[0], 2));
+    $("#btn-remove-logo2").addEventListener("click", () => {
+      company.logo2 = "";
+      renderLogoPreview(2);
     });
   }
 

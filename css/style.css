@@ -231,8 +231,21 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
 .invoice-paper {
   background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 22px; color: #1e293b; font-size: 0.9rem; line-height: 1.5;
+  display: flex; flex-direction: column;
 }
+/* L'aperçu occupe toute la hauteur disponible pour coller le pied en bas */
+#screen-preview .content { display: flex; }
+#screen-preview .invoice-paper { flex: 1; }
+
 .inv-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+
+/* En-tête à deux logos : infos entreprise centrées entre les logos */
+.inv-head--2 { align-items: center; }
+.inv-head--2 .inv-co-center { flex: 1; text-align: center; }
+.inv-head--2 .inv-doc-type,
+.inv-head--2 .inv-doc-meta { text-align: center; }
+.inv-two-logo { max-width: 80px; max-height: 80px; object-fit: contain; flex-shrink: 0; }
+.tpl-bandeau .inv-two-logo { background: #fff; padding: 4px; border-radius: 8px; }
 
 /* Modèle « Bandeau » : en-tête coloré pleine largeur */
 .tpl-bandeau .inv-band {
@@ -268,7 +281,8 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
 .inv-totals { margin-left: auto; width: 62%; max-width: 280px; margin-top: 10px; }
 .inv-totals .row-between { padding: 5px 0; font-size: 0.9rem; }
 .inv-totals .grand { border-top: 2px solid var(--teal); margin-top: 4px; padding-top: 8px; font-size: 1.05rem; font-weight: 800; color: var(--teal-dark); }
-.inv-foot { margin-top: 26px; text-align: center; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+/* La note « Merci » est toujours poussée au pied de page */
+.inv-foot { margin-top: auto; padding-top: 12px; text-align: center; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--line); }
 
 /* ---------- Toast ---------- */
 .toast {
@@ -360,7 +374,7 @@ input[type="color"] { height: 48px; padding: 4px; cursor: pointer; }
   #screen-preview.is-active { display: block; position: static; }
   .no-print { display: none !important; }
   .content { overflow: visible; padding: 0; }
-  .invoice-paper { box-shadow: none; border-radius: 0; padding: 0; }
+  .invoice-paper { box-shadow: none; border-radius: 0; padding: 0; min-height: 100vh; }
   /* le bandeau colle aux bords sans les marges négatives */
   .tpl-bandeau .inv-band { margin: 0 0 18px; border-radius: 0; }
 }
