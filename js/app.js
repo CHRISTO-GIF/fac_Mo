@@ -32,6 +32,7 @@
     email: "",
     address: "",
     taxId: "",
+    nif: "",
     currency: "XOF",
     accent: "#0f766e",
     template: "classique",
@@ -588,6 +589,7 @@
       co.email && escapeHtml(co.email),
       co.address && escapeHtml(co.address),
       co.taxId && `N° : ${escapeHtml(co.taxId)}`,
+      co.nif && `NIF : ${escapeHtml(co.nif)}`,
     ].filter(Boolean).join("<br />");
 
     const rows = draft.items
@@ -884,6 +886,7 @@
     $("#co-email").value = company.email || "";
     $("#co-address").value = company.address || "";
     $("#co-taxid").value = company.taxId || "";
+    $("#co-nif").value = company.nif || "";
     renderLogoPreview(1);
     renderLogoPreview(2);
     showScreen("screen-settings");
@@ -907,6 +910,7 @@
     company.email = $("#co-email").value.trim();
     company.address = $("#co-address").value.trim();
     company.taxId = $("#co-taxid").value.trim();
+    company.nif = $("#co-nif").value.trim();
     company.currency = $("#co-currency").value || DEFAULT_CURRENCY;
     company.accent = pendingAccent || DEFAULT_ACCENT;
     const activeTpl = document.querySelector("#tpl-select .seg.is-active");
