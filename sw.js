@@ -1,5 +1,5 @@
 /* ================= FactoPro — Service Worker (mode hors ligne) ================= */
-const CACHE = "factopro-v2";
+const CACHE = "factopro-v3";
 const ASSETS = [
   "./",
   "./index.html",
