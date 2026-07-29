@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="description" content="FactoPro — Générez factures, proformas et devis en FCFA, hors ligne, en quelques secondes." />
+  <title>FactoPro</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ================= ÉCRAN 1 : ACCUEIL ================= -->
+  <section id="screen-home" class="screen is-active">
+    <header class="app-header">
+      <div class="brand">
+        <img id="home-logo" class="brand-logo" alt="Logo" hidden />
+        <div class="brand-fallback" id="home-logo-fallback">F</div>
+        <div class="brand-text">
+          <h1>FactoPro</h1>
+          <p id="home-company-name">Votre entreprise</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="btn-settings" aria-label="Réglages entreprise">⚙</button>
+    </header>
+
+    <main class="content">
+      <button class="btn btn-primary btn-lg" id="btn-new-doc">
+        <span class="btn-icon">＋</span> Nouveau document
+      </button>
+
+      <!-- Tableau de bord (basé sur les factures) -->
+      <div id="stats" class="stats" hidden>
+        <div class="stat-tile">
+          <span class="stat-label">Facturé</span>
+          <strong id="stat-billed" class="stat-value">0 FCFA</strong>
+        </div>
+        <div class="stat-tile stat-paid">
+          <span class="stat-label">Encaissé</span>
+          <strong id="stat-paid" class="stat-value">0 FCFA</strong>
+        </div>
+        <div class="stat-tile stat-due">
+          <span class="stat-label">Reste à encaisser</span>
+          <strong id="stat-due" class="stat-value">0 FCFA</strong>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>Documents</h2>
+        <span id="doc-count" class="pill">0</span>
+      </div>
+
+      <!-- Recherche -->
+      <div id="search-bar" class="search-bar" hidden>
+        <input type="search" id="search-input" autocomplete="off" placeholder="Rechercher un client, un n°…" />
+      </div>
+
+      <!-- Filtres -->
+      <div id="filters" class="filters" hidden>
+        <button type="button" class="chip is-active" data-filter="tous">Tous</button>
+        <button type="button" class="chip" data-filter="impaye">Impayées</button>
+        <button type="button" class="chip" data-filter="partiel">Partielles</button>
+        <button type="button" class="chip" data-filter="paye">Payées</button>
+      </div>
+
+      <ul id="doc-list" class="doc-list"></ul>
+
+      <div id="doc-empty" class="empty-state">
+        <div class="empty-emoji">🧾</div>
+        <p>Aucun document pour l'instant.<br />Appuyez sur <strong>Nouveau document</strong> pour commencer.</p>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-ghost" id="btn-catalog">📇 Carnet</button>
+      <button class="btn btn-ghost" id="btn-settings-2">⚙ Entreprise</button>
+    </footer>
+  </section>
+
+  <!-- ================= ÉCRAN 2 : NOUVEAU / ÉDITION ================= -->
+  <section id="screen-edit" class="screen">
+    <header class="app-header sub">
+      <button class="icon-btn back-btn" id="btn-edit-back" aria-label="Retour">‹ Retour</button>
+      <h1 id="edit-title">Nouveau document</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <!-- Type de document -->
+      <div class="field">
+        <label class="field-label">Type de document</label>
+        <div class="segmented" id="doc-type">
+          <button type="button" class="seg is-active" data-type="facture">Facture</button>
+          <button type="button" class="seg" data-type="proforma">Proforma</button>
+          <button type="button" class="seg" data-type="devis">Devis</button>
+        </div>
+      </div>
+
+      <!-- Listes d'autocomplétion (carnet) -->
+      <datalist id="clients-datalist"></datalist>
+      <datalist id="articles-datalist"></datalist>
+
+      <!-- Client -->
+      <div class="card">
+        <h3 class="card-title">Client</h3>
+        <div class="field">
+          <label class="field-label" for="client-name">Nom du client *</label>
+          <input id="client-name" type="text" list="clients-datalist" autocomplete="off" placeholder="Ex. Boutique Aïcha" />
+          <p class="muted small" style="margin:6px 0 0">Commencez à taper : vos clients enregistrés apparaissent.</p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="client-phone">Téléphone</label>
+          <input id="client-phone" type="tel" placeholder="Ex. +237 6 00 00 00 00" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="client-address">Adresse</label>
+          <input id="client-address" type="text" placeholder="Ville, quartier" />
+        </div>
+      </div>
+
+      <!-- Articles -->
+      <div class="card">
+        <h3 class="card-title">Articles</h3>
+        <div id="items-list"></div>
+        <button class="btn btn-outline btn-block" id="btn-add-item">＋ Ajouter une ligne</button>
+      </div>
+
+      <!-- Taxe -->
+      <div class="card">
+        <div class="row-between">
+          <div>
+            <h3 class="card-title" style="margin:0">Taxe (TVA)</h3>
+            <p class="muted small">Activez si vous facturez avec TVA.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="tax-enabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field" id="tax-rate-field" hidden>
+          <label class="field-label" for="tax-rate">Taux de TVA (%)</label>
+          <input id="tax-rate" type="number" inputmode="decimal" step="0.01" value="19.25" />
+        </div>
+      </div>
+
+      <!-- Statut de paiement (factures uniquement) -->
+      <div class="card" id="payment-card" hidden>
+        <h3 class="card-title">Statut de paiement</h3>
+        <div class="segmented" id="pay-status">
+          <button type="button" class="seg is-active" data-status="impaye">Impayé</button>
+          <button type="button" class="seg" data-status="partiel">Partiel</button>
+          <button type="button" class="seg" data-status="paye">Payé</button>
+        </div>
+        <div class="field" id="paid-amount-field" hidden style="margin-top:12px">
+          <label class="field-label" for="paid-amount">Montant déjà payé</label>
+          <input id="paid-amount" type="number" inputmode="decimal" step="any" min="0" value="0" />
+          <p class="muted small" id="balance-hint" style="margin:6px 0 0"></p>
+        </div>
+      </div>
+
+      <!-- Totaux live -->
+      <div class="totals-preview">
+        <div class="row-between"><span>Total HT</span><strong id="edit-total-ht">0 FCFA</strong></div>
+        <div class="row-between" id="edit-tax-row" hidden><span>TVA</span><strong id="edit-total-tax">0 FCFA</strong></div>
+        <div class="row-between total-ttc"><span>Total TTC</span><strong id="edit-total-ttc">0 FCFA</strong></div>
+      </div>
+
+      <!-- Actions sur un document existant -->
+      <div id="doc-actions" class="doc-actions" hidden>
+        <button type="button" class="btn btn-outline" id="btn-duplicate">⧉ Dupliquer</button>
+        <button type="button" class="btn btn-danger" id="btn-delete">🗑 Supprimer</button>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-outline" id="btn-edit-save">💾 Enregistrer</button>
+      <button class="btn btn-primary" id="btn-preview">Aperçu →</button>
+    </footer>
+  </section>
+
+  <!-- ================= ÉCRAN 3 : APERÇU ================= -->
+  <section id="screen-preview" class="screen">
+    <header class="app-header sub no-print">
+      <button class="icon-btn back-btn" id="btn-preview-back" aria-label="Retour">‹ Retour</button>
+      <h1>Aperçu</h1>
+      <button class="icon-btn" id="btn-print" aria-label="Imprimer / PDF">🖨</button>
+    </header>
+
+    <main class="content">
+      <div id="invoice-paper" class="invoice-paper">
+        <!-- rempli par JS -->
+      </div>
+    </main>
+
+    <footer class="app-footer no-print">
+      <button class="btn btn-outline" id="btn-save">💾 Enregistrer</button>
+      <button class="btn btn-primary" id="btn-share">📤 Partager</button>
+    </footer>
+  </section>
+
+  <!-- ================= RÉGLAGES ENTREPRISE (modale plein écran) ================= -->
+  <section id="screen-settings" class="screen">
+    <header class="app-header sub">
+      <button class="icon-btn back-btn" id="btn-settings-back" aria-label="Retour">‹ Retour</button>
+      <h1>Mon entreprise</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <div class="card">
+        <h3 class="card-title">Logos</h3>
+        <p class="muted small" style="margin:0 0 12px">Ajoutez un logo, ou deux. Avec deux logos, les infos de l'entreprise sont centrées entre eux.</p>
+        <div class="logo-uploader">
+          <div class="logo-preview" id="settings-logo-preview">
+            <img id="settings-logo-img" alt="Logo 1" hidden />
+            <span id="settings-logo-placeholder">Logo 1</span>
+          </div>
+          <div class="logo-actions">
+            <label class="btn btn-outline btn-sm">
+              Choisir
+              <input type="file" id="logo-input" accept="image/*" hidden />
+            </label>
+            <button class="btn btn-ghost btn-sm" id="btn-remove-logo">Retirer</button>
+          </div>
+        </div>
+        <div class="logo-uploader" style="margin-top:14px">
+          <div class="logo-preview" id="settings-logo2-preview">
+            <img id="settings-logo2-img" alt="Logo 2" hidden />
+            <span id="settings-logo2-placeholder">Logo 2</span>
+          </div>
+          <div class="logo-actions">
+            <label class="btn btn-outline btn-sm">
+              Choisir
+              <input type="file" id="logo2-input" accept="image/*" hidden />
+            </label>
+            <button class="btn btn-ghost btn-sm" id="btn-remove-logo2">Retirer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Informations</h3>
+        <div class="field">
+          <label class="field-label" for="co-name">Nom de l'entreprise *</label>
+          <input id="co-name" type="text" placeholder="Ex. Ets FactoPro" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-currency">Devise</label>
+          <select id="co-currency"></select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-phone">Téléphone</label>
+          <input id="co-phone" type="tel" placeholder="+237 6 00 00 00 00" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-email">Email</label>
+          <input id="co-email" type="email" placeholder="contact@exemple.com" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-address">Adresse</label>
+          <input id="co-address" type="text" placeholder="Ville, quartier" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-taxid">N° contribuable / RCCM</label>
+          <input id="co-taxid" type="text" placeholder="Optionnel" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="co-nif">NIF (N° d'identification fiscale)</label>
+          <input id="co-nif" type="text" placeholder="Optionnel" />
+        </div>
+      </div>
+
+      <!-- Apparence de la facture -->
+      <div class="card">
+        <h3 class="card-title">Apparence de la facture</h3>
+        <div class="field">
+          <label class="field-label">Modèle</label>
+          <div class="segmented" id="tpl-select">
+            <button type="button" class="seg is-active" data-tpl="classique">Classique</button>
+            <button type="button" class="seg" data-tpl="bandeau">Bandeau</button>
+          </div>
+        </div>
+        <label class="field-label">Couleur d'accent</label>
+        <div class="swatches" id="accent-swatches"></div>
+        <div class="field" style="margin-top:14px">
+          <label class="field-label" for="accent-custom">Couleur personnalisée</label>
+          <input id="accent-custom" type="color" value="#0f766e" />
+        </div>
+      </div>
+
+      <!-- Sauvegarde / restauration -->
+      <div class="card">
+        <h3 class="card-title">Sauvegarde des données</h3>
+        <p class="muted small" style="margin:0 0 12px">
+          Vos données sont stockées sur cet appareil. Exportez un fichier de secours pour ne rien perdre,
+          ou importez-le sur un autre téléphone.
+        </p>
+        <div class="doc-actions" style="margin:0">
+          <button type="button" class="btn btn-outline" id="btn-export">⬇ Exporter</button>
+          <label class="btn btn-outline" style="cursor:pointer">⬆ Importer
+            <input type="file" id="import-input" accept="application/json,.json" hidden />
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <button class="btn btn-primary btn-block" id="btn-save-settings">Enregistrer</button>
+    </footer>
+  </section>
+
+  <!-- ================= CARNET (clients & articles) ================= -->
+  <section id="screen-catalog" class="screen">
+    <header class="app-header sub">
+      <button class="icon-btn back-btn" id="btn-catalog-back" aria-label="Retour">‹ Retour</button>
+      <h1>Carnet</h1>
+      <span></span>
+    </header>
+
+    <main class="content">
+      <div class="segmented" id="catalog-tabs" style="margin-bottom:14px">
+        <button type="button" class="seg is-active" data-tab="clients">Clients</button>
+        <button type="button" class="seg" data-tab="articles">Articles</button>
+      </div>
+
+      <div id="catalog-clients">
+        <ul id="clients-list" class="doc-list"></ul>
+        <div id="clients-empty" class="empty-state">
+          <div class="empty-emoji">📇</div>
+          <p>Aucun client enregistré.<br />Ils s'ajouteront automatiquement quand vous créerez des documents.</p>
+        </div>
+      </div>
+
+      <div id="catalog-articles" hidden>
+        <ul id="articles-list" class="doc-list"></ul>
+        <div id="articles-empty" class="empty-state">
+          <div class="empty-emoji">📦</div>
+          <p>Aucun article enregistré.<br />Ils s'ajouteront automatiquement quand vous facturerez.</p>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
